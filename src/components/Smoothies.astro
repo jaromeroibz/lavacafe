@@ -1,0 +1,247 @@
+---
+// Content transcribed from LAVA's own digital menu (menu lava 3.jpg).
+//
+// PRICES NEED CONFIRMING: the wooden board in the shop and the digital menu
+// disagree (the board says 7500 across the board, and uses different names —
+// "Green Balance" and "Magic Cloud" where the digital menu says "Green Power"
+// and "Tropical Dream"). The digital menu looks newer, so it is what is used
+// here, but nothing should be published until she confirms.
+const SMOOTHIES = [
+  {
+    name: 'Magic Cloud',
+    price: '8.500',
+    tag: 'Nourish & restore',
+    note: 'Creamy, tropical and satisfying.',
+    ingredients:
+      'Homemade almond milk, pineapple, banana, avocado, coconut cream, almond butter, vanilla protein, blue spirulina.',
+  },
+  {
+    name: 'Skin Food',
+    price: '8.500',
+    tag: 'Hydration & skin support',
+    note: 'Fresh and creamy.',
+    ingredients:
+      'Homemade almond milk, strawberries, pithaya, banana, avocado, cashew-coconut butter, vanilla protein, collagen peptides, berry glaze.',
+  },
+  {
+    name: 'Energy Elixir',
+    price: '8.500',
+    tag: 'Clean energy & focus',
+    note: 'Steady energy and mental clarity without crashes.',
+    ingredients:
+      'Homemade almond milk, banana, peanut butter, chocolate protein, maca, reishi, lions mane, creatine, espresso shot.',
+  },
+  {
+    name: 'Green Power',
+    price: '6.500',
+    tag: 'Balance, digestion & minerals',
+    note: 'Light, refreshing and fiber-rich.',
+    ingredients:
+      'Homemade almond milk, green apple, banana, spinach, kale, lemon, chia seeds, coconut yogurt, ginger, mint green spirulina, bee pollen.',
+  },
+  {
+    name: 'Tropical Dream',
+    price: '6.500',
+    tag: 'Glow & anti-inflammatory',
+    note: 'Bright, juicy and uplifting.',
+    ingredients:
+      'Homemade almond milk, papaya, mango, banana, maracuya, pithaya, cashew butter, turmeric.',
+  },
+];
+---
+
+<section class="sm" id="smoothies">
+  <!-- Half the section is the rock field; it stays out of the reading column. -->
+  <div class="sm__field" aria-hidden="true"></div>
+
+  <div class="sm__copy">
+    <p class="sm__kicker">// Smoothies</p>
+    <h2 class="sm__title">Five, each built on homemade almond milk</h2>
+
+    <ul class="sm__list">
+      {
+        SMOOTHIES.map((s) => (
+          <li class="sm__item">
+            <div class="sm__row">
+              <h3 class="sm__name">{s.name}</h3>
+              <span class="sm__price">₡{s.price}</span>
+            </div>
+            <p class="sm__tag">{s.tag}</p>
+            <p class="sm__ing">{s.ingredients}</p>
+            <p class="sm__note">{s.note}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .sm {
+    position: relative;
+    background: var(--paper);
+    border-top: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  /* ---- rock field ---- */
+
+  .sm__field {
+    position: relative;
+    overflow: hidden;
+    background: var(--paper-2);
+    /* On phones there is no cursor to react to, so it becomes a quiet band. */
+    height: 38svh;
+    cursor: crosshair;
+  }
+
+  /* The ribbed weave from LAVA's own texture artwork. */
+  .sm__field::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(117, 118, 100, 0.08) 0 1px,
+      transparent 1px 4px
+    );
+  }
+
+  /* ---- copy ---- */
+
+  .sm__copy {
+    padding: clamp(2.5rem, 7vw, 5.5rem) clamp(1.25rem, 5vw, 4rem);
+  }
+
+  .sm__kicker {
+    margin: 0 0 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--green-ink);
+  }
+
+  .sm__title {
+    margin: 0 0 clamp(2rem, 4vw, 3rem);
+    font-size: clamp(1.9rem, 3.4vw, 3rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--ink);
+    max-width: 16ch;
+  }
+
+  .sm__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-width: 42rem;
+  }
+
+  .sm__item {
+    padding: clamp(1.1rem, 2vw, 1.5rem) 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .sm__item:last-child {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .sm__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .sm__name {
+    margin: 0;
+    font-size: clamp(1.15rem, 2vw, 1.5rem);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  .sm__price {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .sm__tag {
+    margin: 0.45rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--green-ink);
+  }
+
+  .sm__ing {
+    margin: 0.6rem 0 0;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    max-width: 52ch;
+  }
+
+  /* Their menu sets the flavour note in a serif italic. */
+  .sm__note {
+    margin: 0.35rem 0 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  /* ---- desktop split ---- */
+
+  @media (min-width: 900px) {
+    .sm {
+      grid-template-columns: 42% 1fr;
+      align-items: start;
+    }
+
+    .sm__field {
+      position: sticky;
+      top: 0;
+      height: 100svh;
+      border-right: 1px solid var(--rule);
+    }
+
+    .sm__copy {
+      padding: clamp(4rem, 9vh, 7rem) clamp(2rem, 4vw, 4.5rem);
+    }
+  }
+</style>
+
+<script>
+  import { createRockField } from '../scripts/rock-field';
+
+  const field = document.querySelector<HTMLElement>('.sm__field');
+
+  if (field) {
+    const instance = createRockField(field, {
+      rocks: [
+        '/img/rocks/a.webp',
+        '/img/rocks/b.webp',
+        '/img/rocks/c.webp',
+        '/img/rocks/d.webp',
+      ],
+      radius: 230,
+      strength: 140,
+      density: 30000,
+      minCount: 9,
+      maxCount: 26,
+      sizeRange: [30, 88],
+    });
+
+    // Test hook: the preview pane stalls requestAnimationFrame whenever it is
+    // hidden, so the loop has to be advanceable by hand.
+    (window as any).__rockField = instance;
+  }
+</script>

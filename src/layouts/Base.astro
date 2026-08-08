@@ -1,0 +1,122 @@
+---
+import Intro from '../components/Intro.astro';
+
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="preload" as="image" href="/img/cafe-680.avif" type="image/avif" />
+  </head>
+  <body>
+    <Intro />
+    <div class="grain" aria-hidden="true"></div>
+    <slot />
+
+    <script>
+      import Lenis from 'lenis';
+      import { gsap } from 'gsap';
+      import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+      gsap.registerPlugin(ScrollTrigger);
+
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // Lenis drives the scroll position; ScrollTrigger reads from it rather than
+      // from native scroll, otherwise pinned/scrubbed sections lag behind by a frame.
+      if (!reduced) {
+        const lenis = new Lenis({ duration: 1.1, smoothWheel: true, anchors: true });
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add((time) => lenis.raf(time * 1000));
+        gsap.ticker.lagSmoothing(0);
+
+        // Exposed so in-page navigation (and anything scripted) scrolls through
+        // Lenis rather than fighting it with a native scrollTo.
+        window.lenis = lenis;
+        window.ScrollTrigger = ScrollTrigger;
+
+        ScrollTrigger.refresh();
+      }
+    </script>
+
+    <style is:global>
+      /* Every value here is sampled from LAVA's own material — the logo, the
+         digital menu, the texture artwork — not chosen. See docs/identidad.md. */
+      :root {
+        --paper: #edf2e3; /* logo cream / menu background */
+        --paper-2: #e4ebd8; /* one step down, for alternating sections */
+        --green: #02b72c; /* logo green; the menu's is #05b828, imperceptibly different */
+        /* The brand green only reaches 2.4:1 on cream, so it is used for fills
+           and large display only. This darkened step carries small text: at
+           11-12px the old #04801f sat at 4.48:1, a hair under AA. */
+        --green-ink: #026e1a;
+        --ink: #2b2c27; /* darkened step of their neutral, for display type */
+        --body: #686961; /* their menu grey, one step down to clear AA on cream */
+        --rock: #757664;
+        --mint: #afd2b4;
+        --muted: rgba(43, 44, 39, 0.55);
+        --rule: rgba(43, 44, 39, 0.16);
+
+        --font-display: system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--paper);
+        color: var(--body);
+        font-family: var(--font-display);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+
+      /* Paper texture. LAVA's own artwork is a fine ribbed weave, not random
+         noise, so this is ruled lines plus a little grain — and it still hides
+         the compression artifacts in the Instagram-sourced photography.
+         Multiply, not overlay: on a light ground overlay barely registers. */
+      .grain {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        pointer-events: none;
+        opacity: 0.5;
+        mix-blend-mode: multiply;
+        background-image:
+          repeating-linear-gradient(
+            0deg,
+            rgba(43, 44, 39, 0.035) 0 1px,
+            transparent 1px 3px
+          ),
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </body>
+</html>

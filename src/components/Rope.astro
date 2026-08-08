@@ -1,0 +1,391 @@
+---
+// A line that descends as you scroll, dropping a rock past four stops. The
+// left half carries the rope; the right half swaps its copy to match whichever
+// stop the rope has reached.
+//
+// COPY NOTE: everything here is drawn from LAVA's own menu, photos and Google
+// listing — nine coffees, four matchas, five smoothies, the Tikiliano courtyard,
+// the hours, the chasen visible in their own photo. The one line that is
+// positioning rather than fact is marked below; she should sign off on it.
+const MAPS_URL = 'https://maps.app.goo.gl/EHR3PckW6mPwscZM9';
+
+const STOPS = [
+  {
+    n: '01',
+    word: 'Coffee',
+    lead: 'Nine ways to start.',
+    body:
+      'Espresso, americano, cortado, cappuccino, flat white, latte, vanilla latte, cold brew, vanilla cream cold brew.',
+    meta: 'From ₡1.800',
+  },
+  {
+    n: '02',
+    word: 'Matcha',
+    lead: 'Whisked by hand, one bowl at a time.',
+    body:
+      'Four ways: as tea, as a latte, with mango, or with coconut. Prepared with a bamboo chasen at the counter, not shaken from a bottle.',
+    // The one claim that is positioning rather than verifiable fact.
+    note: 'The one people come back for.',
+    meta: '₡3.000 – ₡4.800',
+  },
+  {
+    n: '03',
+    word: 'Smoothies',
+    lead: 'Five, each built on almond milk made in house.',
+    body:
+      'Magic Cloud, Skin Food, Energy Elixir, Green Power, Tropical Dream — each named for what it is for, not what is in it.',
+    meta: '₡6.500 – ₡8.500',
+  },
+  {
+    n: '04',
+    word: 'Santa Teresa',
+    lead: 'Inside the courtyard of Tikiliano.',
+    body:
+      'Tucked off the main road, which is exactly why it stays calm. Open Monday to Friday 8–4:30, Saturday 9–4, Sunday 10–4.',
+    meta: 'Puntarenas, Costa Rica',
+    cta: 'How to find us',
+  },
+];
+
+// Stops sit at the centre of four equal bands, so the rope arrives at each one
+// while its panel is up. Keep in sync with the band maths in the script.
+const T = [0.125, 0.375, 0.625, 0.875];
+
+const PATH =
+  'M200 0 C200 80 70 130 70 230 C70 330 330 370 330 480 C330 590 70 620 70 730 C70 840 290 870 240 1000';
+---
+
+<section class="rope" id="rope">
+  <div class="rope__inner">
+    <div class="rope__side">
+      <svg class="rope__svg" viewBox="0 0 400 1000" fill="none" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <defs>
+          <linearGradient id="ropeGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#afd2b4" stop-opacity="0.5"></stop>
+            <stop offset="30%" stop-color="#779e7f"></stop>
+            <stop offset="100%" stop-color="#757664"></stop>
+          </linearGradient>
+        </defs>
+
+        <path class="rope__ghost" d={PATH} pathLength="1"></path>
+        <path class="rope__path" d={PATH} pathLength="1"></path>
+
+        {T.map((t) => <circle class="rope__dot" r="5" data-t={t} />)}
+
+        <!-- Their own volcanic rock, chroma-keyed off the brand green. -->
+        <image class="rope__rock" href="/img/rock.png" width="64" height="62"></image>
+      </svg>
+    </div>
+
+    <div class="rope__panels">
+      {
+        STOPS.map((s, i) => (
+          <article class="rope__panel" data-panel={i} data-active={i === 0 ? 'true' : 'false'}>
+            <p class="rope__kicker">// {s.n} — {s.word}</p>
+            <h2 class="rope__word">{s.word}</h2>
+            <p class="rope__lead">{s.lead}</p>
+            <p class="rope__body">{s.body}</p>
+            {s.note && <p class="rope__note">{s.note}</p>}
+            <p class="rope__meta">{s.meta}</p>
+            {s.cta && (
+              <a class="rope__cta" href={MAPS_URL} target="_blank" rel="noopener">
+                {s.cta}
+              </a>
+            )}
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .rope {
+    position: relative;
+    background: var(--paper-2);
+  }
+
+  /* The ribbed weave from LAVA's own texture artwork. */
+  .rope::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(117, 118, 100, 0.09) 0 1px,
+      transparent 1px 4px
+    );
+  }
+
+  .rope__inner {
+    position: relative;
+    z-index: 1;
+    min-height: 100svh;
+    display: grid;
+    grid-template-columns: 36% 1fr;
+    align-items: center;
+    gap: clamp(1rem, 4vw, 3rem);
+    padding: clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 5vw, 4rem);
+  }
+
+  .rope__side {
+    height: min(78svh, 720px);
+  }
+
+  .rope__svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .rope__ghost,
+  .rope__path {
+    fill: none;
+    stroke-linecap: round;
+    stroke-width: 4;
+  }
+
+  .rope__ghost {
+    stroke: var(--rule);
+  }
+
+  .rope__path {
+    stroke: url(#ropeGrad);
+    /* pathLength="1" normalises the geometry, so the scrub runs 1 → 0 whatever
+       shape the curve later takes. */
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  .rope__dot {
+    fill: var(--paper-2);
+    stroke: var(--rule);
+    stroke-width: 2;
+    transition: fill 0.4s ease, stroke 0.4s ease;
+  }
+
+  .rope__dot[data-passed='true'] {
+    fill: var(--green);
+    stroke: var(--green);
+  }
+
+  .rope__rock {
+    opacity: 0;
+  }
+
+  /* ---- panels ---- */
+
+  .rope__panels {
+    position: relative;
+    min-height: 26rem;
+  }
+
+  .rope__panel {
+    position: absolute;
+    inset: 0;
+    max-width: 34rem;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    pointer-events: none;
+  }
+
+  .rope__panel[data-active='true'] {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .rope__kicker {
+    margin: 0 0 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--green-ink);
+  }
+
+  .rope__word {
+    margin: 0 0 1rem;
+    font-size: clamp(2.2rem, 6vw, 4.5rem);
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  .rope__lead {
+    margin: 0 0 0.9rem;
+    font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+    line-height: 1.35;
+    color: var(--ink);
+    max-width: 24ch;
+  }
+
+  .rope__body {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-width: 46ch;
+  }
+
+  /* Their menu sets its flavour notes in a serif italic. */
+  .rope__note {
+    margin: 0.9rem 0 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--green-ink);
+  }
+
+  .rope__meta {
+    margin: 1.4rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .rope__cta {
+    display: inline-flex;
+    align-items: center;
+    height: 2.7rem;
+    margin-top: 1.2rem;
+    padding: 0 1.3rem;
+    border-radius: 999px;
+    background: var(--green);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .rope__cta:hover {
+    transform: translateY(-2px);
+  }
+
+  @media (min-width: 900px) {
+    .rope__inner {
+      grid-template-columns: 40% 1fr;
+      padding: clamp(2rem, 4vw, 4rem) clamp(2rem, 5vw, 5rem);
+    }
+  }
+
+  /* Without motion the section becomes a plain stacked list — no pin, no swap. */
+  @media (prefers-reduced-motion: reduce) {
+    .rope__path {
+      stroke-dashoffset: 0;
+    }
+    .rope__rock {
+      opacity: 1;
+    }
+    .rope__panels {
+      display: grid;
+      gap: 3rem;
+      min-height: 0;
+    }
+    .rope__panel {
+      position: relative;
+      inset: auto;
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+    }
+    .rope__dot {
+      fill: var(--green);
+      stroke: var(--green);
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const section = document.querySelector<HTMLElement>('.rope');
+  const inner = document.querySelector<HTMLElement>('.rope__inner');
+  const path = document.querySelector<SVGPathElement>('.rope__path');
+  const rock = document.querySelector<SVGImageElement>('.rope__rock');
+  const dots = Array.from(document.querySelectorAll<SVGCircleElement>('.rope__dot'));
+  const panels = Array.from(document.querySelectorAll<HTMLElement>('.rope__panel'));
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (section && inner && path && panels.length && !reduced) {
+    const COUNT = panels.length;
+
+    // Park the dots on the curve. Their positions come from the real geometry,
+    // so reshaping the path never means repositioning them by hand.
+    const placeDots = () => {
+      const len = path.getTotalLength();
+      dots.forEach((dot) => {
+        const pt = path.getPointAtLength(parseFloat(dot.dataset.t ?? '0') * len);
+        dot.setAttribute('cx', String(pt.x));
+        dot.setAttribute('cy', String(pt.y));
+      });
+    };
+    placeDots();
+
+    let active = -1;
+
+    const render = (p: number) => {
+      path.style.strokeDashoffset = String(1 - p);
+
+      const len = path.getTotalLength();
+      if (rock) {
+        if (p > 0.001) {
+          const pt = path.getPointAtLength(p * len);
+          rock.setAttribute('x', String(pt.x - 32));
+          rock.setAttribute('y', String(pt.y - 31));
+          rock.setAttribute('transform', `rotate(${p * 200} ${pt.x} ${pt.y})`);
+          rock.style.opacity = '1';
+        } else {
+          rock.style.opacity = '0';
+        }
+      }
+
+      dots.forEach((dot) => {
+        dot.dataset.passed = p >= parseFloat(dot.dataset.t ?? '0') ? 'true' : 'false';
+      });
+
+      // Four equal bands, one per panel; stops sit at each band's centre.
+      const next = Math.min(COUNT - 1, Math.max(0, Math.floor(p * COUNT)));
+      if (next !== active) {
+        active = next;
+        panels.forEach((panel, i) => {
+          panel.dataset.active = i === next ? 'true' : 'false';
+        });
+      }
+    };
+
+    ScrollTrigger.create({
+      trigger: section,
+      pin: inner,
+      start: 'top top',
+      // One viewport of scroll per stop.
+      end: () => `+=${window.innerHeight * COUNT}`,
+      scrub: true,
+      invalidateOnRefresh: true,
+      onUpdate: (self) => render(self.progress),
+      onRefresh: (self) => {
+        placeDots();
+        render(self.progress);
+      },
+    });
+
+    render(0);
+
+    // Test hook: the preview pane stalls rAF whenever it is hidden.
+    (window as any).__rope = { render, panels, dots };
+  }
+</script>

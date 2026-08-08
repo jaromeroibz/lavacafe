@@ -1,0 +1,317 @@
+---
+// Split hero: copy on the left over paper, their own façade photo full-bleed on
+// the right. The photo is 680x1020 (0.667) and the right column at 42vw on a
+// typical desktop is 0.672 — so it lands with no cropping at all.
+const MAPS_URL = 'https://maps.app.goo.gl/EHR3PckW6mPwscZM9';
+---
+
+<section class="hero">
+  <div class="hero__panel">
+    <span class="hero__shaft" aria-hidden="true"></span>
+
+    <header class="hero__bar">
+      <a class="hero__logo" href="/" aria-label="LAVA, home">
+        <img
+          src="/img/logo-220.webp"
+          srcset="/img/logo-120.webp 120w, /img/logo-220.webp 220w"
+          sizes="56px"
+          width="220"
+          height="220"
+          alt="LAVA"
+        />
+      </a>
+      <nav class="hero__nav">
+        <a href="#rope">Menu</a>
+        <a href={MAPS_URL} target="_blank" rel="noopener">Find us</a>
+      </nav>
+    </header>
+
+    <div class="hero__body">
+      <p class="hero__kicker" data-fade>// Santa Teresa, Costa Rica</p>
+      <h1 class="hero__title" data-split>Coffee, Matcha, Smoothies</h1>
+      <a class="hero__link" href={MAPS_URL} target="_blank" rel="noopener" data-fade>
+        How to find us
+        <span class="hero__arrow" aria-hidden="true">&#8594;</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="hero__media">
+    <picture>
+      <source
+        type="image/avif"
+        srcset="/img/cafe-440.avif 440w, /img/cafe-680.avif 680w"
+        sizes="(max-width: 900px) 100vw, 42vw"
+      />
+      <source
+        type="image/webp"
+        srcset="/img/cafe-440.webp 440w, /img/cafe-680.webp 680w"
+        sizes="(max-width: 900px) 100vw, 42vw"
+      />
+      <img
+        class="hero__photo"
+        src="/img/cafe-680.webp"
+        width="680"
+        height="1020"
+        alt="The entrance to LAVA — glass doors, linen curtains and greenery, inside the Tikiliano courtyard"
+        fetchpriority="high"
+        decoding="async"
+      />
+    </picture>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    background: var(--paper);
+    overflow: hidden;
+  }
+
+  /* ---- left panel ---- */
+
+  .hero__panel {
+    position: relative;
+    z-index: 2;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: clamp(2rem, 6vh, 4rem);
+    padding: clamp(1.25rem, 3vw, 2.5rem);
+    /* Their terrazzo floor, sampled from the photo, desaturated and lifted so it
+       reads as paper grain rather than as a picture of a floor. */
+    background-image: url('/img/terrazzo.webp');
+    background-size: 240px;
+    background-blend-mode: multiply;
+  }
+
+  .hero__panel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: var(--paper);
+    opacity: 0.9;
+    z-index: 0;
+  }
+
+  /* Rhymes with the hard diagonal sun shadows inside the photograph. Kept below
+     the content: at any opacity above the type it washes the text out. */
+  .hero__shaft {
+    position: absolute;
+    top: -20%;
+    left: -10%;
+    width: 60%;
+    height: 150%;
+    z-index: 1;
+    transform: rotate(18deg);
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(255, 255, 255, 0.4) 45%,
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  /* Content sits above the paper wash and the shaft. Listing the children
+     explicitly rather than using `> *`, which would clobber the absolute
+     positioning on the shaft and drop it into the flow. */
+  .hero__bar,
+  .hero__body {
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .hero__logo {
+    display: block;
+    line-height: 0;
+  }
+
+  .hero__logo img {
+    width: clamp(46px, 5vw, 60px);
+    height: auto;
+    border-radius: 4px;
+    display: block;
+  }
+
+  .hero__nav {
+    display: flex;
+    gap: clamp(1rem, 3vw, 2rem);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .hero__nav a {
+    /* --body, not --muted: the translucent grey only reached ~3:1 on paper. */
+    color: var(--body);
+    text-decoration: none;
+    padding-bottom: 2px;
+    border-bottom: 1px solid transparent;
+    transition: color 0.35s ease, border-color 0.35s ease;
+  }
+
+  .hero__nav a:hover {
+    color: var(--ink);
+    border-color: var(--green-ink);
+  }
+
+  .hero__kicker {
+    margin: 0 0 clamp(1.25rem, 3vh, 2rem);
+    padding-bottom: clamp(1.25rem, 3vh, 2rem);
+    border-bottom: 1px solid var(--rule);
+    max-width: 22rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--green-ink);
+  }
+
+  .hero__title {
+    max-width: 10ch;
+    margin: 0 0 clamp(2rem, 5vh, 3.25rem);
+    font-size: clamp(2.6rem, 6.4vw, 5.4rem);
+    line-height: 0.88;
+    letter-spacing: -0.035em;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  /* Editorial: a text link with a rule, not a button. */
+  .hero__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--ink);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--ink);
+    transition: color 0.3s ease, border-color 0.3s ease;
+  }
+
+  .hero__link:hover {
+    color: var(--green-ink);
+    border-color: var(--green-ink);
+  }
+
+  .hero__arrow {
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .hero__link:hover .hero__arrow {
+    transform: translateX(4px);
+  }
+
+  /* ---- photo ---- */
+
+  .hero__media {
+    position: relative;
+    grid-row: 1;
+    width: 100%;
+    height: 46svh;
+    overflow: hidden;
+  }
+
+  .hero__photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 50%;
+    display: block;
+    /* Lift the blacks a touch so the photo sits nearer the paper, and dissolve
+       its inner edge into the page instead of butting against it. */
+    filter: brightness(1.05) saturate(0.97);
+    -webkit-mask-image: linear-gradient(to top, transparent 0%, #000 12%);
+    mask-image: linear-gradient(to top, transparent 0%, #000 12%);
+  }
+
+  @media (min-width: 900px) {
+    .hero {
+      grid-template-columns: 1fr 42vw;
+      grid-template-rows: 1fr;
+    }
+
+    .hero__panel {
+      grid-column: 1;
+      grid-row: 1;
+      min-height: 100svh;
+      padding: clamp(2rem, 3.5vw, 3.5rem);
+    }
+
+    .hero__media {
+      grid-column: 2;
+      grid-row: 1;
+      height: 100svh;
+    }
+
+    .hero__photo {
+      /* On the split the seam is vertical, so the dissolve moves with it. */
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 13%);
+      mask-image: linear-gradient(to right, transparent 0%, #000 13%);
+    }
+
+    .hero__title {
+      font-size: clamp(3rem, 5.2vw, 6rem);
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import { SplitText } from 'gsap/SplitText';
+
+  gsap.registerPlugin(ScrollTrigger, SplitText);
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const photo = document.querySelector<HTMLElement>('.hero__photo');
+  const title = document.querySelector<HTMLElement>('[data-split]');
+  const fades = gsap.utils.toArray<HTMLElement>('[data-fade]');
+
+  function enter() {
+    if (reduced) {
+      gsap.set([...fades, photo], { opacity: 1, y: 0, clearProps: 'transform' });
+      return;
+    }
+
+    const split = SplitText.create(title, { type: 'words,chars', mask: 'words' });
+
+    gsap
+      .timeline({ defaults: { ease: 'expo.out' } })
+      .from(photo, { scale: 1.12, duration: 1.6, ease: 'power3.out' }, 0)
+      .from(split.chars, { yPercent: 115, duration: 1, stagger: 0.02 }, 0.2)
+      .from(fades, { opacity: 0, y: 16, duration: 0.8, stagger: 0.09 }, 0.45);
+
+    // The photo drifts slower than the page.
+    gsap.to(photo, {
+      yPercent: 8,
+      ease: 'none',
+      scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true },
+    });
+  }
+
+  // Wait for the intro curtain so the hero does not animate behind an overlay.
+  if ((window as any).__introDone) enter();
+  else window.addEventListener('lava:intro-done', enter, { once: true });
+</script>

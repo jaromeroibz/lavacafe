@@ -1,0 +1,407 @@
+---
+import Base from '../layouts/Base.astro';
+
+// Playground route, not part of the site. Four cursor-reactive archetypes built
+// with LAVA's own rocks so the choice can be made by feel rather than by
+// description. Pick one, then it moves into a real section.
+const VARIANTS = [
+  {
+    id: 'trail',
+    n: '01',
+    name: 'Estela',
+    blurb:
+      'Las rocas persiguen al cursor con retraso. Cada una sigue a la anterior, así que la cadena se curva sola.',
+  },
+  {
+    id: 'aim',
+    n: '02',
+    name: 'Campo que apunta',
+    blurb:
+      'Las rocas no se mueven de su sitio: solo giran para mirar al cursor. Como limaduras de hierro.',
+  },
+  {
+    id: 'repel',
+    n: '03',
+    name: 'Repulsión',
+    blurb:
+      'El cursor las empuja y vuelven flotando a su lugar. Las chicas reaccionan más rápido que las grandes.',
+  },
+  {
+    id: 'strings',
+    n: '04',
+    name: 'Cuerdas elásticas',
+    blurb:
+      'Líneas fijas en los extremos. El cursor las arrastra desde el medio y rebotan al soltarlas.',
+  },
+];
+---
+
+<Base title="LAVA — laboratorio de movimiento" description="Cuatro variantes de animación reactiva al cursor.">
+  <header class="lab__head">
+    <p class="lab__kicker">// Laboratorio</p>
+    <h1 class="lab__title">Cuatro maneras de reaccionar al cursor</h1>
+    <p class="lab__note">
+      Mové el mouse dentro de cada recuadro. Elegí una y la llevamos a una sección real.
+    </p>
+  </header>
+
+  {
+    VARIANTS.map((v) => (
+      <section class="lab__block">
+        <div class="lab__meta">
+          <p class="lab__kicker">
+            // {v.n} — {v.name}
+          </p>
+          <p class="lab__blurb">{v.blurb}</p>
+        </div>
+        <div class="stage" data-variant={v.id} aria-hidden="true" />
+      </section>
+    ))
+  }
+</Base>
+
+<style>
+  .lab__head {
+    padding: clamp(3rem, 10vh, 7rem) clamp(1.25rem, 5vw, 4rem) 1rem;
+    max-width: 60rem;
+  }
+
+  .lab__kicker {
+    margin: 0 0 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--green-ink);
+  }
+
+  .lab__title {
+    margin: 0 0 1rem;
+    font-size: clamp(2rem, 5vw, 3.75rem);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--ink);
+    max-width: 18ch;
+  }
+
+  .lab__note,
+  .lab__blurb {
+    margin: 0;
+    max-width: 46ch;
+    line-height: 1.6;
+  }
+
+  .lab__block {
+    padding: clamp(2rem, 6vh, 4rem) clamp(1.25rem, 5vw, 4rem);
+  }
+
+  .lab__meta {
+    margin-bottom: 1.25rem;
+  }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    height: min(70svh, 560px);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--paper-2);
+    overflow: hidden;
+    cursor: crosshair;
+    touch-action: pan-y;
+  }
+
+  /* The ribbed weave from LAVA's texture artwork. */
+  .stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(117, 118, 100, 0.08) 0 1px,
+      transparent 1px 4px
+    );
+  }
+
+  .stage :global(.rock) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    will-change: transform;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .stage :global(svg) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .stage :global(path) {
+    fill: none;
+    stroke: var(--rock);
+    stroke-width: 1.5;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stage {
+      cursor: default;
+    }
+  }
+</style>
+
+<script>
+  import { createRockField } from '../scripts/rock-field';
+
+  const ROCKS = ['/img/rocks/a.webp', '/img/rocks/b.webp', '/img/rocks/c.webp', '/img/rocks/d.webp'];
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fine = window.matchMedia('(pointer: fine)').matches;
+
+  const rand = (a: number, b: number) => a + Math.random() * (b - a);
+
+  function makeRock(size: number, i: number) {
+    const el = document.createElement('img');
+    el.className = 'rock';
+    el.src = ROCKS[i % ROCKS.length];
+    el.width = size;
+    el.height = size;
+    el.style.width = `${size}px`;
+    el.style.height = 'auto';
+    el.draggable = false;
+    return el;
+  }
+
+  interface Stage {
+    el: HTMLElement;
+    w: number;
+    h: number;
+    px: number;
+    py: number;
+    active: boolean;
+    update: (dt: number) => void;
+  }
+
+  const stages: Stage[] = [];
+
+  // ---------- 01 · estela ----------
+  function trail(s: Stage) {
+    const N = 12;
+    const items = Array.from({ length: N }, (_, i) => {
+      const size = 78 - i * 4;
+      const el = makeRock(size, i);
+      el.style.opacity = String(1 - i * 0.06);
+      s.el.appendChild(el);
+      return { el, x: s.w / 2, y: s.h / 2, size, rot: 0 };
+    });
+
+    return () => {
+      items.forEach((it, i) => {
+        const tx = i === 0 ? s.px : items[i - 1].x;
+        const ty = i === 0 ? s.py : items[i - 1].y;
+        const k = i === 0 ? 0.45 : 0.42;
+        const dx = tx - it.x;
+        const dy = ty - it.y;
+        it.x += dx * k;
+        it.y += dy * k;
+        // Rotation follows the direction of travel, so the chain reads as motion.
+        if (Math.hypot(dx, dy) > 0.5) it.rot = (Math.atan2(dy, dx) * 180) / Math.PI;
+        it.el.style.transform = `translate3d(${it.x - it.size / 2}px, ${it.y - it.size / 2}px, 0) rotate(${it.rot}deg)`;
+      });
+    };
+  }
+
+  // ---------- 02 · campo que apunta ----------
+  function aim(s: Stage) {
+    const cols = Math.max(4, Math.round(s.w / 150));
+    const rows = Math.max(3, Math.round(s.h / 150));
+    const items: { el: HTMLElement; x: number; y: number; size: number; rot: number }[] = [];
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const size = 46;
+        const el = makeRock(size, r * cols + c);
+        el.style.opacity = '0.9';
+        s.el.appendChild(el);
+        items.push({
+          el,
+          x: ((c + 0.5) / cols) * s.w,
+          y: ((r + 0.5) / rows) * s.h,
+          size,
+          rot: 0,
+        });
+      }
+    }
+
+    return () => {
+      items.forEach((it) => {
+        const target = (Math.atan2(s.py - it.y, s.px - it.x) * 180) / Math.PI;
+        // Shortest-path interpolation, or it spins the long way round at ±180.
+        let diff = ((target - it.rot + 540) % 360) - 180;
+        it.rot += diff * 0.12;
+        const d = Math.hypot(s.px - it.x, s.py - it.y);
+        const near = Math.max(0, 1 - d / 260);
+        const sc = 1 + near * 0.5;
+        it.el.style.transform = `translate3d(${it.x - it.size / 2}px, ${it.y - it.size / 2}px, 0) rotate(${it.rot}deg) scale(${sc})`;
+      });
+    };
+  }
+
+  // ---------- 03 · repulsión ----------
+  // Shares its physics with the live Smoothies section via rock-field.ts, so the
+  // sandbox and the real thing cannot drift apart.
+  function repel(s: Stage) {
+    const field = createRockField(s.el, { rocks: ROCKS, density: 26000, minCount: 10 });
+    return () => field.step();
+  }
+
+  // ---------- 04 · cuerdas elásticas ----------
+  function strings(s: Stage) {
+    const LINES = 6;
+    const RADIUS = 150;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', `0 0 ${s.w} ${s.h}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    s.el.appendChild(svg);
+
+    const items = Array.from({ length: LINES }, (_, i) => {
+      const y = ((i + 1) / (LINES + 1)) * s.h;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      svg.appendChild(path);
+      const size = 40;
+      const el = makeRock(size, i);
+      s.el.appendChild(el);
+      return { path, el, y, size, cx: s.w / 2, cy: y, vx: 0, vy: 0, rot: 0 };
+    });
+
+    return () => {
+      items.forEach((it) => {
+        const near = Math.abs(s.py - it.y) < RADIUS;
+        const tx = near ? s.px : s.w / 2;
+        const ty = near ? s.py : it.y;
+        // Spring: overshoot then settle. Damping is what makes it feel elastic
+        // rather than merely eased.
+        it.vx += (tx - it.cx) * 0.1;
+        it.vy += (ty - it.cy) * 0.1;
+        it.vx *= 0.82;
+        it.vy *= 0.82;
+        it.cx += it.vx;
+        it.cy += it.vy;
+        // Quadratic control point sits at twice the offset, so the curve passes
+        // through the rock rather than falling short of it.
+        const qx = it.cx * 2 - s.w / 2;
+        const qy = it.cy * 2 - it.y;
+        it.path.setAttribute('d', `M 0 ${it.y} Q ${qx} ${qy} ${s.w} ${it.y}`);
+        it.rot += it.vx * 0.6;
+        it.el.style.transform = `translate3d(${it.cx - it.size / 2}px, ${it.cy - it.size / 2}px, 0) rotate(${it.rot}deg)`;
+      });
+    };
+  }
+
+  const BUILDERS: Record<string, (s: Stage) => (dt: number) => void> = {
+    trail,
+    aim,
+    repel,
+    strings,
+  };
+
+  // Rock counts and positions are derived from the stage's size, so a stage
+  // built before layout settles (or while the tab is hidden, where everything
+  // measures near zero) comes out degenerate. Build on measure, rebuild on
+  // resize, and never build against a box that isn't real yet.
+  function rebuild(s: Stage) {
+    const rect = s.el.getBoundingClientRect();
+    if (rect.width < 80 || rect.height < 80) {
+      s.update = () => {};
+      return;
+    }
+    s.w = rect.width;
+    s.h = rect.height;
+    s.px = rect.width / 2;
+    s.py = rect.height / 2;
+    s.el.replaceChildren();
+    s.update = BUILDERS[s.el.dataset.variant ?? 'repel'](s);
+  }
+
+  document.querySelectorAll<HTMLElement>('.stage').forEach((el) => {
+    const s: Stage = {
+      el,
+      w: 0,
+      h: 0,
+      px: 0,
+      py: 0,
+      active: true,
+      update: () => {},
+    };
+    stages.push(s);
+
+    let t = 0;
+    new ResizeObserver(() => {
+      clearTimeout(t);
+      t = window.setTimeout(() => rebuild(s), 120);
+    }).observe(el);
+
+    rebuild(s);
+
+    el.addEventListener(
+      'pointermove',
+      (e) => {
+        const b = el.getBoundingClientRect();
+        s.px = e.clientX - b.left;
+        s.py = e.clientY - b.top;
+      },
+      { passive: true }
+    );
+
+    // Idle drift when the pointer leaves, so the stage never looks broken.
+    el.addEventListener('pointerleave', () => {
+      s.px = s.w / 2;
+      s.py = s.h / 2;
+    });
+  });
+
+  // Only animate what is on screen.
+  const io = new IntersectionObserver(
+    (entries) => entries.forEach((e) => {
+      const s = stages.find((x) => x.el === e.target);
+      if (s) s.active = e.isIntersecting;
+    }),
+    { rootMargin: '100px' }
+  );
+  stages.forEach((s) => io.observe(s.el));
+
+  const tick = () => {
+    stages.forEach((s) => s.active && s.update(16.7));
+  };
+
+  (window as any).__labRebuild = () => stages.forEach(rebuild);
+
+  if (!reduced && fine) {
+    const loop = () => {
+      tick();
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  } else {
+    // Touch and reduced-motion get one static frame — the composition still reads.
+    tick();
+  }
+
+  // Test hook: lets the frame loop be advanced without requestAnimationFrame,
+  // which is stalled whenever the preview pane is hidden.
+  (window as any).__lab = {
+    stages,
+    step(n = 1) {
+      for (let i = 0; i < n; i++) tick();
+    },
+    point(i: number, x: number, y: number) {
+      stages[i].px = x;
+      stages[i].py = y;
+    },
+  };
+</script>

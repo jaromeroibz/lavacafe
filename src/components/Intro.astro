@@ -1,0 +1,190 @@
+---
+// Their logo lockup on brand green while the page loads, then the whole panel
+// lifts away. Deliberately quiet: the hero it uncovers is editorial, and a
+// showy entrance would be writing a cheque the page does not cash.
+//
+// The page renders behind this overlay from the first byte, so crawlers and
+// no-JS visitors never see a blank document.
+---
+
+<div class="intro" data-state="loading">
+  <div class="intro__bg"></div>
+
+  <div class="intro__center">
+    <img class="intro__rock" src="/img/rock.png" width="56" height="54" alt="" />
+    <img class="intro__word" src="/img/wordmark.webp" width="900" height="216" alt="LAVA" />
+    <div class="intro__bar"><span class="intro__fill"></span></div>
+  </div>
+</div>
+
+<noscript>
+  <style>
+    .intro {
+      display: none;
+    }
+  </style>
+</noscript>
+
+<style>
+  .intro {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    pointer-events: none;
+    overflow: hidden;
+    /* Failsafe: if the script never runs, the overlay retires on its own rather
+       than sealing the page shut. */
+    animation: intro-failsafe 0s 4s forwards;
+  }
+
+  @keyframes intro-failsafe {
+    to {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+
+  .intro[data-state='done'] {
+    visibility: hidden;
+  }
+
+  .intro__bg {
+    position: absolute;
+    inset: 0;
+    background: var(--green);
+  }
+
+  .intro__center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(1.25rem, 3vh, 2rem);
+  }
+
+  .intro__rock {
+    width: clamp(40px, 6vw, 56px);
+    height: auto;
+    animation: intro-spin 3.4s linear infinite;
+  }
+
+  @keyframes intro-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .intro__word {
+    width: min(66vw, 460px);
+    height: auto;
+    will-change: transform, opacity;
+  }
+
+  .intro__bar {
+    width: clamp(110px, 20vw, 170px);
+    height: 2px;
+    background: rgba(237, 242, 227, 0.3);
+    overflow: hidden;
+  }
+
+  .intro__fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--paper);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+
+  /* No reveal at all: the hero is simply there. */
+  @media (prefers-reduced-motion: reduce) {
+    .intro {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+
+  const intro = document.querySelector<HTMLElement>('.intro');
+  const rock = document.querySelector<HTMLElement>('.intro__rock');
+  const word = document.querySelector<HTMLElement>('.intro__word');
+  const bar = document.querySelector<HTMLElement>('.intro__bar');
+  const fill = document.querySelector<HTMLElement>('.intro__fill');
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function finish() {
+    (window as any).__introDone = true;
+    window.dispatchEvent(new Event('lava:intro-done'));
+  }
+
+  if (!intro || reduced) {
+    if (intro) intro.dataset.state = 'done';
+    finish();
+  } else {
+    document.documentElement.style.overflow = 'hidden';
+
+    const images = Array.from(document.images).filter((img) => !img.closest('.intro'));
+    const total = images.length || 1;
+    let loaded = 0;
+
+    const bump = () => {
+      loaded++;
+      if (fill) gsap.set(fill, { scaleX: Math.min(1, loaded / total) });
+    };
+
+    const settled = images.map(
+      (img) =>
+        new Promise<void>((resolve) => {
+          if (img.complete) {
+            bump();
+            resolve();
+            return;
+          }
+          const done = () => {
+            bump();
+            resolve();
+          };
+          img.addEventListener('load', done, { once: true });
+          img.addEventListener('error', done, { once: true });
+        })
+    );
+
+    // A slow asset must never hold the page hostage.
+    const cap = new Promise<void>((resolve) => setTimeout(resolve, 3000));
+
+    // Everything below rides GSAP's ticker, which browsers stop in background
+    // tabs. setTimeout still fires there, so this is the one guarantee that the
+    // page is never left covered with its scroll locked.
+    const release = () => {
+      if ((window as any).__introDone) return;
+      if (intro) intro.dataset.state = 'done';
+      document.documentElement.style.overflow = '';
+      finish();
+    };
+    const hardStop = setTimeout(release, 6000);
+
+    Promise.race([Promise.all(settled), cap]).then(() => {
+      const tl = gsap.timeline({
+        onComplete: () => {
+          clearTimeout(hardStop);
+          release();
+        },
+      });
+
+      // Test hook: the preview pane stalls rAF whenever it is hidden, so the
+      // sequence has to be seekable without it.
+      (window as any).__intro = { tl };
+
+      tl.to(fill, { scaleX: 1, duration: 0.28, ease: 'power2.out' })
+        .to([rock, word, bar], { opacity: 0, y: -14, duration: 0.4, ease: 'power2.in' }, '+=0.14')
+        // The whole panel leaves upward. One move, no layers, no flourish.
+        .to(intro, { yPercent: -100, duration: 0.9, ease: 'power3.inOut' }, '-=0.15');
+    });
+  }
+</script>

@@ -1,0 +1,64 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import Rope from '../components/Rope.astro';
+import Smoothies from '../components/Smoothies.astro';
+---
+
+<Base
+  title="LAVA — Coffee, Matcha, Smoothies · Santa Teresa, Costa Rica"
+  description="Specialty coffee, matcha and smoothies inside the courtyard of Tikiliano, Santa Teresa, Costa Rica. Open Mon–Fri 8–4:30, Sat 9–4, Sun 10–4."
+>
+  <Hero />
+  <Rope />
+  <Smoothies />
+
+  <!-- Placeholder. The menu, location and gallery sections go here. -->
+  <section id="menu" class="next">
+    <p class="next__label">// Next</p>
+    <h2 class="next__title">The menu</h2>
+    <p class="next__note">
+      Then the location, and a gallery built from their feed.
+    </p>
+  </section>
+</Base>
+
+<style>
+  .next {
+    min-height: 90svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1rem;
+    padding: clamp(2rem, 6vw, 6rem);
+    background: var(--paper-2);
+    border-top: 1px solid var(--rule);
+  }
+
+  .next__label {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--green-ink);
+  }
+
+  .next__title {
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 4rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-weight: 800;
+    text-transform: uppercase;
+    max-width: 16ch;
+    color: var(--ink);
+  }
+
+  .next__note {
+    margin: 0;
+    max-width: 42ch;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+</style>

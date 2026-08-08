@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.astro/
+
+# 60 extracted PNG frames (~66MB). Regenerate from matcha.mov with ffmpeg;
+# only the AVIF output in public/img/matcha is needed to run the site.
+scripts/frames-src/
